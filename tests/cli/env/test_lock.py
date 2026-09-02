@@ -620,7 +620,6 @@ def test_custom_lock_filename_with_context_formatting(hatch, helpers, temp_dir, 
         {
             "locked": True,
             "lock-filename": "locks/{env_name}/requirements.txt",
-            **project.config.envs["default"],
         },
     )
     helpers.update_project_environment(
