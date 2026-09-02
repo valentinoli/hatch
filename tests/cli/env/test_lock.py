@@ -638,7 +638,7 @@ def test_custom_lock_filename_with_context_formatting(hatch, helpers, temp_dir, 
     assert f"Wrote lockfile: {project_path / 'requirements-default.txt'}" in result.output
 
     with project_path.as_cwd(env_vars={ConfigEnvVars.DATA: str(data_path)}):
-        result = hatch("env", "lock", "test")
+        result = hatch("env", "lock", "test1")
 
     assert result.exit_code == 0, result.output
     assert f"Wrote lockfile: {project_path / 'locks' / 'test1' / 'requirements.txt'}" in result.output
