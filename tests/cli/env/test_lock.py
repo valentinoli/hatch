@@ -586,6 +586,71 @@ def test_custom_lock_filename(hatch, helpers, temp_dir, config_file):
     assert f"Wrote lockfile: {project_path / 'locks' / 'default.toml'}" in result.output
 
 
+
+@pytest.mark.usefixtures("mock_locker")
+def test_custom_lock_filename_with_context_formatting(hatch, helpers, temp_dir, config_file):
+    config_file.model.template.plugins["default"]["tests"] = False
+    config_file.save()
+
+    project_name = "My.App"
+
+    with temp_dir.as_cwd():
+        result = hatch("new", project_name)
+
+    assert result.exit_code == 0, result.output
+
+    project_path = temp_dir / "my-app"
+    data_path = temp_dir / "data"
+    data_path.mkdir()
+
+    project = Project(project_path)
+    helpers.update_project_environment(
+        project,
+        "default",
+        {
+            "skip-install": True,
+            "dependencies": ["requests"],
+            "locked": True,
+            "lock-filename": "requirements-{env_name}.txt",
+            **project.config.envs["default"],
+        },
+    )
+    helpers.update_project_environment(
+        project,
+        "test1",
+        {
+            "locked": True,
+            "lock-filename": "locks/{env_name}/requirements.txt",
+            **project.config.envs["default"],
+        },
+    )
+    helpers.update_project_environment(
+        project,
+        "test2",
+        {
+            "locked": True,
+        },
+    )
+
+    with project_path.as_cwd(env_vars={ConfigEnvVars.DATA: str(data_path)}):
+        result = hatch("env", "lock", "default")
+
+    assert result.exit_code == 0, result.output
+    assert f"Wrote lockfile: {project_path / 'requirements-default.txt'}" in result.output
+
+    with project_path.as_cwd(env_vars={ConfigEnvVars.DATA: str(data_path)}):
+        result = hatch("env", "lock", "test")
+
+    assert result.exit_code == 0, result.output
+    assert f"Wrote lockfile: {project_path / 'locks' / 'test1' / 'requirements.txt'}" in result.output
+
+    with project_path.as_cwd(env_vars={ConfigEnvVars.DATA: str(data_path)}):
+        result = hatch("env", "lock", "test2")
+
+    assert result.exit_code == 0, result.output
+    assert f"Wrote lockfile: {project_path / 'requirements-test2.txt'}" in result.output
+
+
 @pytest.mark.usefixtures("mock_locker")
 def test_matrix(hatch, helpers, temp_dir, config_file):
     config_file.model.template.plugins["default"]["tests"] = False
