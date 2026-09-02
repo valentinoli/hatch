@@ -586,7 +586,6 @@ def test_custom_lock_filename(hatch, helpers, temp_dir, config_file):
     assert f"Wrote lockfile: {project_path / 'locks' / 'default.toml'}" in result.output
 
 
-
 @pytest.mark.usefixtures("mock_locker")
 def test_custom_lock_filename_with_context_formatting(hatch, helpers, temp_dir, config_file):
     config_file.model.template.plugins["default"]["tests"] = False
